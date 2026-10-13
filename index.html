@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Manager Pro</title>
+
+<style>
+    /* CSS Variables for Theming */
+    :root {
+        --bg-main: #0f172a; /* Deep blue background */
+        --bg-card: #1e293b;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --border-color: #334155;
+        --primary-color: #3b82f6;
+        --primary-hover: #2563eb;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        --transition: all 0.3s ease;
+    }
+
+    /* Light Theme Overrides */
+    body.light-mode {
+        --bg-main: #f1f5f9;
+        --bg-card: #ffffff;
+        --text-main: #0f172a;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        min-height: 100vh;
+        transition: var(--transition);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 20px;
+    }
+
+    /* Utility Classes */
+    .hidden { display: none !important; }
+    .container { width: 100%; max-width: 1000px; margin-top: 20px; }
+
+    /* Login Page */
+    #login-page {
+        background: var(--bg-card);
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: var(--shadow);
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+        margin-top: 10vh;
+        border: 1px solid var(--border-color);
+    }
+
+    #login-page h1 { color: var(--primary-color); margin-bottom: 10px; }
+    #login-page p { color: var(--text-muted); margin-bottom: 25px; }
+
+    .input-group { margin-bottom: 15px; text-align: left; }
+    .input-group input {
+        width: 100%; padding: 12px; border-radius: 8px;
+        background: var(--bg-main); border: 1px solid var(--border-color);
+        color: var(--text-main); outline: none; transition: var(--transition);
+    }
+    .input-group input:focus { border-color: var(--primary-color); }
+    
+    .btn {
+        width: 100%; padding: 12px; border: none; border-radius: 8px;
+        background: var(--primary-color); color: white; font-weight: bold;
+        cursor: pointer; transition: var(--transition);
+    }
+    .btn:hover { background: var(--primary-hover); }
+
+    /* Dashboard Header */
+    header {
+        display: flex; justify-content: space-between; align-items: center;
+        background: var(--bg-card); padding: 15px 25px; border-radius: 15px;
+        box-shadow: var(--shadow); margin-bottom: 20px;
+        border: 1px solid var(--border-color);
+    }
+    .header-controls { display: flex; gap: 15px; align-items: center; }
+    .theme-toggle, .logout-btn {
+        background: transparent; border: 1px solid var(--border-color);
+        color: var(--text-main); padding: 8px 15px; border-radius: 8px;
+        cursor: pointer; transition: var(--transition);
+    }
+    .theme-toggle:hover, .logout-btn:hover { background: var(--border-color); }
+    .logout-btn { color: var(--danger); border-color: var(--danger); }
+    .logout-btn:hover { background: var(--danger); color: white; }
+
+    /* Dashboard Cards */
+    .dashboard-cards {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px; margin-bottom: 20px;
+    }
+    .card {
+        background: var(--bg-card); padding: 20px; border-radius: 15px;
+        box-shadow: var(--shadow); border: 1px solid var(--border-color);
+        display: flex; flex-direction: column; justify-content: center;
+    }
+    .card-title { color: var(--text-muted); font-size: 14px; margin-bottom: 10px; font-weight: bold; text-transform: uppercase;}
+    .card-value { font-size: 28px; font-weight: bold; color: var(--primary-color); }
+    .card.completed .card-value { color: var(--success); }
+    .card.pending .card-value { color: var(--warning); }
+
+    /* Progress Bar */
+    .progress-container {
+        background: var(--bg-card); padding: 20px; border-radius: 15px;
+        margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color);
+    }
+    .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-weight: bold;}
+    .progress-track {
+        width: 100%; height: 12px; background: var(--bg-main);
+        border-radius: 10px; overflow: hidden;
+    }
+    .progress-fill {
+        height: 100%; background: var(--success); width: 0%;
+        transition: width 0.5s ease-in-out;
+    }
+
+    /* Input & Filters Section */
+    .controls-wrapper {
+        background: var(--bg-card); padding: 20px; border-radius: 15px;
+        margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-color);
+    }
+    
+    .task-form, .filters {
+        display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px;
+    }
+    .filters { margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border-color); }
+    
+    .controls-wrapper input, .controls-wrapper select {
+        padding: 12px; border-radius: 8px; background: var(--bg-main);
+        border: 1px solid var(--border-color); color: var(--text-main);
+        outline: none; transition: var(--transition);
+    }
+    .controls-wrapper input:focus, .controls-wrapper select:focus { border-color: var(--primary-color); }
+
+    /* Task List */
+    .task-list { display: flex; flex-direction: column; gap: 15px; }
+    
+    .task {
+        background: var(--bg-card); padding: 15px 20px; border-radius: 12px;
+        display: flex; justify-content: space-between; align-items: center;
+        box-shadow: var(--shadow); border: 1px solid var(--border-color);
+        border-left: 6px solid var(--primary-color);
+        transition: var(--transition);
+    }
+    .task:hover { transform: translateY(-2px); }
+    
+    /* Priority Colors */
+    .task.high { border-left-color: var(--danger); }
+    .task.medium { border-left-color: var(--warning); }
+    .task.low { border-left-color: var(--success); }
+
+    .task.completed { opacity: 0.6; }
+    .task.completed .task-text { text-decoration: line-through; color: var(--text-muted); }
+
+    .task-info { flex: 1; }
+    .task-text { font-size: 16px; font-weight: 500; margin-bottom: 5px; }
+    .task-meta { display: flex; gap: 15px; font-size: 12px; color: var(--text-muted); }
+    .badge { padding: 3px 8px; border-radius: 12px; background: var(--bg-main); font-weight: bold;}
+    
+    .actions { display: flex; gap: 8px; }
+    .icon-btn {
+        background: transparent; border: none; cursor: pointer;
+        padding: 8px; border-radius: 6px; font-size: 16px;
+        transition: var(--transition);
+    }
+    .icon-btn.complete:hover { background: var(--success); color: white; }
+    .icon-btn.edit:hover { background: var(--warning); color: white; }
+    .icon-btn.delete:hover { background: var(--danger); color: white; }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 768px) {
+        .task-form, .filters { grid-template-columns: 1fr; }
+        .task { flex-direction: column; align-items: flex-start; gap: 15px; }
+        .actions { width: 100%; justify-content: flex-end; }
+        .dashboard-cards { grid-template-columns: 1fr 1fr; }
+    }
+</style>
+</head>
+<body>
+
+<div id="login-page">
+    <h1>📋 TaskPro</h1>
+    <p>Premium Task Management</p>
+    <form id="loginForm">
+        <div class="input-group">
+            <input type="text" id="username" placeholder="Username" required autocomplete="off">
+        </div>
+        <div class="input-group">
+            <input type="password" id="password" placeholder="Password (Demo: enter any)" required>
+        </div>
+        <button type="submit" class="btn">Login</button>
+    </form>
+</div>
+
+<div id="dashboard-page" class="container hidden">
+    
+    <header>
+        <h2>Welcome, <span id="user-display" style="color:var(--primary-color)">User</span>!</h2>
+        <div class="header-controls">
+            <button class="theme-toggle" onclick="toggleTheme()">🌓 Theme</button>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="dashboard-cards">
+        <div class="card">
+            <div class="card-title">Total Tasks</div>
+            <div class="card-value" id="stat-total">0</div>
+        </div>
+        <div class="card completed">
+            <div class="card-title">Completed</div>
+            <div class="card-value" id="stat-completed">0</div>
+        </div>
+        <div class="card pending">
+            <div class="card-title">Pending</div>
+            <div class="card-value" id="stat-pending">0</div>
+        </div>
+        <div class="card">
+            <div class="card-title">Completion Rate</div>
+            <div class="card-value" id="stat-rate">0%</div>
+        </div>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-header">
+            <span>Overall Progress</span>
+            <span id="progress-text">0%</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <div class="controls-wrapper">
+        <div class="task-form">
+            <input type="text" id="taskInput" placeholder="What needs to be done?">
+            <select id="taskPriority">
+                <option value="low">Low Priority</option>
+                <option value="medium" selected>Medium Priority</option>
+                <option value="high">High Priority</option>
+            </select>
+            <input type="date" id="taskDueDate">
+            <button class="btn" onclick="addTask()">➕ Add Task</button>
+        </div>
+
+        <div class="filters">
+            <input type="text" id="searchInput" placeholder="🔍 Search tasks..." onkeyup="renderTasks()">
+            <select id="filterPriority" onchange="renderTasks()">
+                <option value="all">All Priorities</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+            </select>
+            <select id="filterStatus" onchange="renderTasks()">
+                <option value="all">All Statuses</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+            </select>
+            <button class="btn" style="background:var(--border-color); color:var(--text-main);" onclick="clearFilters()">Clear Filters</button>
+        </div>
+    </div>
+
+    <div class="task-list" id="taskList">
+        </div>
+
+</div>
+
+<script>
+    // --- STATE MANAGEMENT ---
+    let currentUser = null;
+    let tasks = [];
+    
+    // --- DOM ELEMENTS ---
+    const loginPage = document.getElementById('login-page');
+    const dashboardPage = document.getElementById('dashboard-page');
+    const loginForm = document.getElementById('loginForm');
+    const userDisplay = document.getElementById('user-display');
+    
+    // Inputs
+    const taskInput = document.getElementById('taskInput');
+    const taskPriority = document.getElementById('taskPriority');
+    const taskDueDate = document.getElementById('taskDueDate');
+    
+    // Filters
+    const searchInput = document.getElementById('searchInput');
+    const filterPriority = document.getElementById('filterPriority');
+    const filterStatus = document.getElementById('filterStatus');
+
+    // Init Theme from LocalStorage
+    if(localStorage.getItem('theme') === 'light') {
+        document.body.classList.add('light-mode');
+    }
+
+    // --- AUTHENTICATION ---
+    // Check if user is already logged in (session)
+    window.onload = () => {
+        const sessionUser = sessionStorage.getItem('activeUser');
+        if (sessionUser) {
+            initDashboard(sessionUser);
+        }
+    };
+
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const user = document.getElementById('username').value.trim();
+        if (user) {
+            sessionStorage.setItem('activeUser', user);
+            initDashboard(user);
+        }
+    });
+
+    function logout() {
+        sessionStorage.removeItem('activeUser');
+        currentUser = null;
+        tasks = [];
+        dashboardPage.classList.add('hidden');
+        loginPage.classList.remove('hidden');
+        document.getElementById('loginForm').reset();
+    }
+
+    // --- DASHBOARD INITIALIZATION ---
+    function initDashboard(username) {
+        currentUser = username;
+        userDisplay.innerText = username;
+        
+        // Load user-specific tasks from Local Storage
+        tasks = JSON.parse(localStorage.getItem(`tasks_${currentUser}`)) || [];
+        
+        loginPage.classList.add('hidden');
+        dashboardPage.classList.remove('hidden');
+        
+        // Set minimum due date to today
+        const today = new Date().toISOString().split('T')[0];
+        taskDueDate.min = today;
+
+        updateDashboard();
+    }
+
+    function saveTasks() {
+        localStorage.setItem(`tasks_${currentUser}`, JSON.stringify(tasks));
+        updateDashboard();
+    }
+
+    // --- TASK OPERATIONS ---
+    function addTask() {
+        const text = taskInput.value.trim();
+        const priority = taskPriority.value;
+        const dueDate = taskDueDate.value;
+
+        if (!text) {
+            alert("Please enter a task description.");
+            return;
+        }
+
+        const newTask = {
+            id: Date.now(), // Unique ID
+            text: text,
+            priority: priority,
+            dueDate: dueDate || "No date",
+            completed: false,
+            createdAt: new Date().toISOString()
+        };
+
+        tasks.unshift(newTask); // Add to beginning
+        saveTasks();
+
+        // Reset Inputs
+        taskInput.value = "";
+        taskPriority.value = "medium";
+        taskDueDate.value = "";
+    }
+
+    function toggleTask(id) {
+        const task = tasks.find(t => t.id === id);
+        if(task) {
+            task.completed = !task.completed;
+            saveTasks();
+        }
+    }
+
+    function editTask(id) {
+        const task = tasks.find(t => t.id === id);
+        if(task) {
+            const updatedText = prompt("Edit Task:", task.text);
+            if (updatedText !== null && updatedText.trim() !== "") {
+                task.text = updatedText.trim();
+                saveTasks();
+            }
+        }
+    }
+
+    function deleteTask(id) {
+        if(confirm("Are you sure you want to delete this task?")) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveTasks();
+        }
+    }
+
+    // --- UI UPDATES & RENDERING ---
+    function updateDashboard() {
+        renderStats();
+        renderTasks();
+    }
+
+    function renderStats() {
+        const total = tasks.length;
+        const completed = tasks.filter(t => t.completed).length;
+        const pending = total - completed;
+        const rate = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+        document.getElementById('stat-total').innerText = total;
+        document.getElementById('stat-completed').innerText = completed;
+        document.getElementById('stat-pending').innerText = pending;
+        document.getElementById('stat-rate').innerText = rate + "%";
+
+        // Progress Bar
+        document.getElementById('progress-text').innerText = rate + "%";
+        document.getElementById('progress-bar').style.width = rate + "%";
+    }
+
+    function clearFilters() {
+        searchInput.value = "";
+        filterPriority.value = "all";
+        filterStatus.value = "all";
+        renderTasks();
+    }
+
+    function renderTasks() {
+        const taskListEl = document.getElementById('taskList');
+        taskListEl.innerHTML = "";
+
+        // Get filter values
+        const search = searchInput.value.toLowerCase();
+        const pFilter = filterPriority.value;
+        const sFilter = filterStatus.value;
+
+        // Apply filters
+        const filteredTasks = tasks.filter(task => {
+            const matchSearch = task.text.toLowerCase().includes(search);
+            const matchPriority = pFilter === "all" || task.priority === pFilter;
+            const matchStatus = sFilter === "all" || 
+                               (sFilter === "completed" && task.completed) || 
+                               (sFilter === "pending" && !task.completed);
+            
+            return matchSearch && matchPriority && matchStatus;
+        });
+
+        if (filteredTasks.length === 0) {
+            taskListEl.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:20px;">No tasks found matching your criteria.</div>`;
+            return;
+        }
+
+        // Render HTML
+        filteredTasks.forEach(task => {
+            const div = document.createElement("div");
+            div.className = `task ${task.priority} ${task.completed ? 'completed' : ''}`;
+
+            // Formatting due date
+            let displayDate = task.dueDate;
+            if(displayDate !== "No date") {
+                const dateObj = new Date(task.dueDate);
+                displayDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            }
+
+            div.innerHTML = `
+            <div class="task-info">
+                <div class="task-text">${task.text}</div>
+                <div class="task-meta">
+                    <span class="badge" style="text-transform: capitalize;">🔥 ${task.priority}</span>
+                    <span class="badge">📅 ${displayDate}</span>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="icon-btn complete" onclick="toggleTask(${task.id})" title="${task.completed ? 'Mark Pending' : 'Mark Complete'}">
+                    ${task.completed ? '↩️' : '✔️'}
+                </button>
+                <button class="icon-btn edit" onclick="editTask(${task.id})" title="Edit Task">✏️</button>
+                <button class="icon-btn delete" onclick="deleteTask(${task.id})" title="Delete Task">🗑️</button>
+            </div>
+            `;
+            taskListEl.appendChild(div);
+        });
+    }
+
+    // --- THEME TOGGLE ---
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        if (document.body.classList.contains('light-mode')) {
+            localStorage.setItem('theme', 'light');
+        } else {
+            localStorage.setItem('theme', 'dark');
+        }
+    }
+</script>
+
+</body>
+</html>
